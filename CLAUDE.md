@@ -1,8 +1,11 @@
 # CLAUDE.md
 
+**Status:** Active
+**Last Updated:** 2026-05-24
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**IMPORTANT:** Follow documentation rules in [CONTRIBUTING.md](CONTRIBUTING.md) - especially the file creation and naming conventions.
+**IMPORTANT:** Follow the documentation and file-creation rules in [CONTRIBUTING.md](CONTRIBUTING.md) — especially the naming conventions and protected-section rules.
 
 ## Project Overview
 
@@ -12,49 +15,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+Use `uv` for all local development:
+
 ```bash
-# Create/recreate venv with uv (recommended - relocatable venvs)
-uv venv .venv
-uv pip install -e ".[all]"
+# Install all dependencies (dev + browser extras)
+uv sync --extra dev --extra browser
 playwright install chromium
 
-# Activate virtual environment
-source .venv/bin/activate
+# Run all tests (e2e excluded by default)
+uv run pytest
 
-# Run all tests (excluding e2e by default)
-pytest
+# Run with coverage (must meet 90% threshold)
+uv run pytest --cov
 
-# Run with coverage
-pytest --cov
+# Run linter
+uv run ruff check src/ tests/
 
-# Run e2e tests (requires authentication)
-pytest tests/e2e -m e2e
+# Run formatter
+uv run ruff format src/ tests/
+
+# Type checking
+uv run mypy src/notebooklm
+
+# Run all pre-commit checks at once
+uv run pre-commit run --all-files
 
 # CLI testing
-notebooklm --help
+uv run notebooklm --help
 ```
 
 ## Pre-Commit Checks (REQUIRED before committing)
 
-**IMPORTANT:** Always run these checks before committing to avoid CI failures:
+Always run these before committing to avoid CI failures:
 
 ```bash
-# Format code with ruff
-ruff format src/ tests/
-
-# Check for linting issues
-ruff check src/ tests/
-
-# Type checking with mypy
-mypy src/notebooklm --ignore-missing-imports
-
-# Run tests
-pytest
-```
-
-Or use this one-liner:
-```bash
-ruff format src/ tests/ && ruff check src/ tests/ && mypy src/notebooklm --ignore-missing-imports && pytest
+uv run ruff format src/ tests/ && uv run ruff check src/ tests/ && uv run mypy src/notebooklm && uv run pytest
 ```
 
 ## Architecture
@@ -72,7 +67,7 @@ RPC Layer (rpc/)
 ```
 
 1. **RPC Layer** (`src/notebooklm/rpc/`):
-   - `types.py`: All RPC method IDs and enums (source of truth)
+   - `types.py`: All RPC method IDs and enums (source of truth — see protected sections below)
    - `encoder.py`: Request encoding
    - `decoder.py`: Response parsing
 
@@ -99,25 +94,45 @@ RPC Layer (rpc/)
 | `_sources.py` | `client.sources` API |
 | `_artifacts.py` | `client.artifacts` API |
 | `_chat.py` | `client.chat` API |
-| `rpc/types.py` | RPC method IDs (source of truth) |
-| `auth.py` | Authentication handling |
-| `cli/` | CLI command modules |
+| `_research.py` | `client.research` API |
+| `_notes.py` | `client.notes` API |
+| `_sharing.py` | `client.sharing` API |
+| `_settings.py` | Settings and configuration management |
+| `_logging.py` | Internal logging setup |
+| `_url_utils.py` | URL validation and normalization helpers |
+| `_version_check.py` | Startup version-check against PyPI |
+| `auth.py` | Authentication handling (cookies, CSRF tokens) |
+| `exceptions.py` | Exception hierarchy |
+| `paths.py` | Storage path resolution (`NOTEBOOKLM_HOME`) |
+| `types.py` | Public dataclasses and type definitions |
+| `notebooklm_cli.py` | CLI entry point (registered as `notebooklm` script) |
+| `rpc/types.py` | RPC method IDs and enums (source of truth) |
+| `cli/` | Click command modules |
 
 ### Repository Structure
 
 ```
 src/notebooklm/
 ├── __init__.py          # Public exports
+├── __main__.py          # python -m notebooklm entry point
 ├── client.py            # NotebookLMClient
 ├── auth.py              # Authentication
-├── types.py             # Dataclasses
-├── _core.py             # Core infrastructure
+├── types.py             # Public dataclasses
+├── exceptions.py        # Exception hierarchy
+├── paths.py             # Storage path resolution
+├── notebooklm_cli.py    # CLI entry point
+├── _core.py             # Core HTTP/RPC infrastructure
 ├── _notebooks.py        # NotebooksAPI
 ├── _sources.py          # SourcesAPI
 ├── _artifacts.py        # ArtifactsAPI
 ├── _chat.py             # ChatAPI
 ├── _research.py         # ResearchAPI
 ├── _notes.py            # NotesAPI
+├── _sharing.py          # SharingAPI
+├── _settings.py         # Settings management
+├── _logging.py          # Logging setup
+├── _url_utils.py        # URL helpers
+├── _version_check.py    # Version update checks
 ├── rpc/                 # RPC protocol layer
 │   ├── types.py         # Method IDs and enums
 │   ├── encoder.py       # Request encoding
@@ -133,6 +148,14 @@ src/notebooklm/
     ├── download.py      # download commands
     ├── chat.py          # ask, configure, history
     └── note.py          # note commands
+
+tests/
+├── conftest.py          # Shared fixtures
+├── vcr_config.py        # VCR.py configuration
+├── cassettes/           # Recorded HTTP fixtures (checked in)
+├── unit/                # Pure logic tests, no network
+├── integration/         # VCR-backed HTTP flow tests
+└── e2e/                 # Authenticated live tests (opt-in)
 ```
 
 ## API Patterns
@@ -140,7 +163,7 @@ src/notebooklm/
 ### Client Usage
 
 ```python
-# Correct pattern - uses namespaced APIs
+# Correct pattern — uses namespaced APIs
 async with await NotebookLMClient.from_storage() as client:
     notebooks = await client.notebooks.list()
     await client.sources.add_url(nb_id, url)
@@ -154,18 +177,82 @@ Commands are organized as:
 - **Top-level**: `login`, `use`, `status`, `clear`, `list`, `create`, `ask`
 - **Grouped**: `source add`, `artifact list`, `generate audio`, `download video`, `note create`
 
+### Skill Installation
+
+Install the bundled SKILL.md for use with Claude Code and other compatible agents:
+
+```bash
+# Via the notebooklm CLI
+notebooklm skill install
+
+# Via npx (cross-agent discovery)
+npx skills add notebooklm-py
+```
+
 ## Testing Strategy
 
-- **Unit tests** (`tests/unit/`): Test encoding/decoding, no network
-- **Integration tests** (`tests/integration/`): Mock HTTP responses
-- **E2E tests** (`tests/e2e/`): Real API, require auth, marked `@pytest.mark.e2e`
+- **Unit tests** (`tests/unit/`): Pure logic tests — no network calls
+- **Integration tests** (`tests/integration/`): VCR-backed HTTP flows using recorded cassettes
+- **E2E tests** (`tests/e2e/`): Live API calls requiring authentication; excluded from default `pytest` run
 
-### E2E Test Status
+### Pytest Markers
 
-- ✅ Notebook operations (list, create, rename, delete)
-- ✅ Source operations (add URL/text/YouTube, rename)
-- ✅ Download operations (audio, video, infographic, slides)
-- ⚠️ Artifact generation may fail due to rate limiting
+| Marker | Description |
+|--------|-------------|
+| `e2e` | Requires `notebooklm login` and live network; run with `pytest tests/e2e -m e2e` |
+| `readonly` | Safe to run against a shared test notebook; `pytest tests/e2e -m readonly` |
+| `vcr` | Uses VCR.py recorded cassettes |
+| `variants` | Parameter-variant tests that consume API quota; skipped by default |
+
+### Coverage
+
+The minimum coverage threshold is **90%**. `pytest --cov` will fail if coverage drops below this.
+
+### Recording VCR Cassettes
+
+Integration tests use pre-recorded HTTP cassettes stored in `tests/cassettes/`. To re-record a cassette:
+
+```bash
+NOTEBOOKLM_VCR_RECORD=1 uv run pytest tests/integration/test_vcr_<name>.py -v
+```
+
+Commit the updated cassette alongside the test change.
+
+### E2E Tests
+
+```bash
+# Authenticate first
+notebooklm login
+
+# Run read-only e2e tests against your test notebook
+pytest tests/e2e -m readonly
+
+# Run full e2e suite (may create/delete notebooks)
+pytest tests/e2e -m e2e
+```
+
+## Coding Style & Conventions
+
+- Target Python 3.10+
+- 4-space indentation, double quotes
+- Line length: 100 characters (ruff enforces)
+- Module and test file names in `snake_case`
+- Internal modules use `_` prefix (`_sources.py`); public exports go in `src/notebooklm/__init__.py`
+- Prefer descriptive Click command names that match existing groups (`source`, `artifact`, `research`)
+- All Python code should include type hints for public functions
+
+## Commit Style
+
+Follow Conventional Commits matching existing history:
+
+```txt
+feat(cli): add bulk source deletion command
+fix(rpc): update artifact generation method ID
+refactor(test): extract shared VCR fixture to conftest
+style: run ruff formatter
+docs(readme): update agent setup section
+chore(deps): bump httpx to 0.28.0
+```
 
 ## Common Pitfalls
 
@@ -174,61 +261,78 @@ Commands are organized as:
 3. **Source ID nesting**: Different methods need `[id]`, `[[id]]`, `[[[id]]]`, or `[[[[id]]]]`
 4. **CSRF tokens expire**: Use `client.refresh_auth()` or re-run `notebooklm login`
 5. **Rate limiting**: Add delays between bulk operations
+6. **Coverage threshold**: `pytest --cov` fails below 90% — ensure new code has tests
 
-## Documentation
+## AI Agent Rules (from CONTRIBUTING.md)
 
-All docs use lowercase-kebab naming in `docs/`:
-- `docs/cli-reference.md` - CLI commands
-- `docs/python-api.md` - Python API reference
-- `docs/configuration.md` - Storage and settings
-- `docs/troubleshooting.md` - Known issues
-- `docs/development.md` - Architecture, testing, releasing
-- `docs/rpc-development.md` - RPC capture and debugging
-- `docs/rpc-reference.md` - RPC payload structures
+### File Creation Rules
+
+1. **No Root Rule**: Never create `.md` files in the repository root unless explicitly instructed by the user.
+2. **Modify, Don't Fork**: Edit existing files; never create `FILE_v2.md`, `FILE_REFERENCE.md`, or `FILE_updated.md` duplicates.
+3. **Scratchpad Protocol**: All analysis, investigation logs, and intermediate work go in `docs/scratch/` with date prefix: `YYYY-MM-DD-<context>.md`
+4. **Consolidation First**: Before creating new docs, search for existing related docs and update them instead.
+
+### Protected Sections
+
+Never modify content between `PROTECTED` and `END PROTECTED` markers without explicit user approval. In-source markers look like:
+
+```python
+# PROTECTED: Do not modify without approval
+class RPCMethod(Enum):
+    ...
+# END PROTECTED
+```
+
+### Naming Conventions
+
+| Type | Format | Example |
+|------|--------|---------|
+| Root GitHub files | `UPPERCASE.md` | `README.md`, `CONTRIBUTING.md` |
+| Agent files | `UPPERCASE.md` | `CLAUDE.md`, `AGENTS.md` |
+| Subfolder README | `README.md` | `docs/examples/README.md` |
+| All other docs/ files | `lowercase-kebab.md` | `cli-reference.md` |
+| Scratch files | `YYYY-MM-DD-context.md` | `2026-01-06-debug-auth.md` |
+
+### Status Headers
+
+Documentation files should include status metadata:
+
+```markdown
+**Status:** Active | Deprecated
+**Last Updated:** YYYY-MM-DD
+```
+
+Ignore files marked `Deprecated`.
+
+### Agent Isolation
+
+When running multiple parallel agents on the same machine, isolate each agent's storage with:
+
+```bash
+NOTEBOOKLM_HOME=/tmp/<agent-id> uv run notebooklm ...
+```
+
+Pass explicit notebook IDs rather than relying on `notebooklm use` to avoid cross-agent state conflicts. Prefer `--json` output flags for programmatic parsing.
 
 ## When to Suggest CLI vs API
 
 - **CLI**: Quick tasks, shell scripts, LLM agent automation
 - **Python API**: Application integration, complex workflows, async operations
 
-## Pull Request Workflow (REQUIRED)
+## Documentation
 
-After creating a PR, you MUST monitor and address feedback:
+All docs use lowercase-kebab naming in `docs/`:
 
-### 1. Monitor CI Status
-```bash
-# Check CI status (repeat until all pass)
-gh pr checks <PR_NUMBER>
-```
-
-Wait for all checks to pass. If any fail, investigate and fix.
-
-### 2. Check for Review Comments
-```bash
-# Get review comments
-gh api repos/teng-lin/notebooklm-py/pulls/<PR_NUMBER>/comments \
-  --jq '.[] | "File: \(.path):\(.line)\nComment: \(.body)\n---"'
-```
-
-### 3. Address Feedback
-For each review comment (especially from `gemini-code-assist`):
-1. Read and understand the feedback
-2. Make the suggested fix if it improves the code
-3. Commit with a descriptive message referencing the feedback
-4. Push and re-check CI
-5. **Reply to the review thread** confirming the fix:
-   ```bash
-   gh api repos/teng-lin/notebooklm-py/pulls/<PR>/comments/<COMMENT_ID>/replies \
-     -f body="Addressed in commit <SHA>: <brief description>"
-   ```
-
-### 4. Verify Final State
-```bash
-# Ensure PR is ready to merge
-gh pr view <PR_NUMBER> --json state,mergeStateStatus,mergeable
-```
-
-**Important**: Do NOT consider a PR complete until:
-- All CI checks pass
-- All review comments are addressed
-- `mergeStateStatus` is `CLEAN`
+| File | Purpose |
+|------|---------|
+| `docs/cli-reference.md` | CLI commands reference |
+| `docs/python-api.md` | Python API reference |
+| `docs/configuration.md` | Storage and settings |
+| `docs/troubleshooting.md` | Known issues |
+| `docs/stability.md` | API versioning and stability policy |
+| `docs/development.md` | Architecture, testing, releasing |
+| `docs/releasing.md` | Release checklist |
+| `docs/rpc-development.md` | RPC capture and debugging |
+| `docs/rpc-reference.md` | RPC payload structures |
+| `docs/examples/` | Runnable example scripts |
+| `docs/scratch/` | Temporary agent investigation logs (date-prefixed, periodic cleanup) |
