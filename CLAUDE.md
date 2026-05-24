@@ -10,6 +10,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Critical constraint**: This uses Google's internal `batchexecute` RPC protocol with obfuscated method IDs that Google can change at any time. All RPC method IDs in `src/notebooklm/rpc/types.py` are undocumented and subject to breakage.
 
+## External repositories
+
+The following external repositories are cloned globally at the parent level (`/home/user/`) for reference during development:
+
+- **AgenticHealthAI/Awesome-AI-Agents-for-Healthcare** (`../Awesome-AI-Agents-for-Healthcare/`): Curated list of research papers, open-source projects, and resources on AI agents applied to healthcare. Useful reference when exploring healthcare AI agent patterns and integrations.
+
 ## Development Commands
 
 ```bash
