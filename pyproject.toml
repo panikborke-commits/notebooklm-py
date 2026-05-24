@@ -57,6 +57,9 @@ notebooklm = "notebooklm.notebooklm_cli:main"
 requires = ["hatchling", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
+[tool.uv.sources]
+hermes-agent = { git = "https://github.com/NousResearch/hermes-agent.git" }
+
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"
 
