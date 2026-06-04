@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Impressum – Praxis der Podologie Jessica Halim</title>
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://www.praxis-der-podologie.de/impressum.html" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .legal-page { max-width: 720px; margin-inline: auto; padding: 3rem var(--container-pad); }
+    .legal-page h1 { font-size: 2rem; margin-bottom: 2rem; color: var(--color-primary); }
+    .legal-page h2 { font-size: 1.15rem; font-weight: 700; margin: 2rem 0 0.5rem; }
+    .legal-page p, .legal-page address { color: var(--color-text); line-height: 1.7; }
+    .legal-page p + p { margin-top: 0.75rem; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 2rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar" role="navigation">
+      <div class="container nav-inner">
+        <a class="nav-logo" href="index.html">
+          <span class="logo-text">
+            <span class="logo-main">Praxis der Podologie</span>
+            <span class="logo-sub">Jessica Halim · Lauenburg</span>
+          </span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="legal-page">
+      <a href="index.html" class="back-link">← Zurück zur Startseite</a>
+
+      <h1>Impressum</h1>
+
+      <h2>Angaben gemäß § 5 TMG</h2>
+      <address>
+        <strong>Praxis der Podologie</strong><br />
+        Jessica Halim<br />
+        Am Schüsselteich 30<br />
+        21481 Lauenburg (Elbe)
+      </address>
+
+      <h2>Kontakt</h2>
+      <p>
+        Telefon: <a href="tel:+4941535987766">04153 – 5987766</a><br />
+        E-Mail: <a href="mailto:info@pdph.de">info@pdph.de</a><br />
+        Website: <a href="https://www.praxis-der-podologie.de">www.praxis-der-podologie.de</a>
+      </p>
+
+      <h2>Berufsbezeichnung und berufsrechtliche Regelungen</h2>
+      <p>
+        Berufsbezeichnung: Podologin (staatlich geprüft)<br />
+        Zuständige Aufsichtsbehörde: Gesundheitsamt des Kreises Herzogtum Lauenburg
+      </p>
+      <p>
+        Es gelten die berufsrechtlichen Regelungen des Podologengesetzes (PodG) sowie der
+        Ausbildungs- und Prüfungsverordnung für Podologinnen und Podologen (PodAPrV).
+      </p>
+
+      <h2>Haftungsausschluss</h2>
+      <p>
+        Die Inhalte dieser Website wurden mit größter Sorgfalt erstellt. Für die Richtigkeit,
+        Vollständigkeit und Aktualität der Inhalte übernehmen wir keine Gewähr. Als Diensteanbieter
+        sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte verantwortlich.
+      </p>
+
+      <h2>Urheberrecht</h2>
+      <p>
+        Die auf dieser Website veröffentlichten Inhalte und Werke unterliegen dem deutschen
+        Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung oder jede Art der Verwertung
+        außerhalb der Grenzen des Urheberrechts bedarf der schriftlichen Zustimmung des jeweiligen
+        Autors bzw. Erstellers.
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-copy">&copy; 2012 – <span id="currentYear"></span> Praxis der Podologie, Jessica Halim.</p>
+    </div>
+  </footer>
+  <script>
+    const y = document.getElementById('currentYear');
+    if (y) y.textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
